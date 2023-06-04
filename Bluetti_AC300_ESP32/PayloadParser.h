@@ -7,6 +7,7 @@
 #define CHECKSUM_SIZE 2
 
 typedef struct __attribute__ ((packed)) {
+  bool  header_ready;
   uint8_t Request;            // 1 byte
   uint16_t idx;              // 2 bytes  
   uint16_t len;              // 2 bytes  
@@ -22,7 +23,7 @@ uint64_t parse_serial_field(uint8_t data[]);
 float parse_version_field(uint8_t data[]);
 String parse_string_field(uint8_t data[]);
 String parse_enum_field(uint8_t data[]);
-
+void printMsg(pageBuffer_t *pageBuffer);
 extern int parse_bluetooth_data(uint8_t AddrHighByte, uint8_t AddrLowByte, uint8_t* pData, size_t length, pageBuffer_t *pageBuffer);
 
 

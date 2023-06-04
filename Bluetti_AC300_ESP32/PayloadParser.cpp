@@ -95,6 +95,33 @@ String parse_enum_field(uint8_t data[]){
     return "";
 }
 
+/********************************************/
+void printMsg(pageBuffer_t *pageBuffer){
+  Serial.printf("Full Message:\n");
+  Serial.printf("pageBuffer->header_ready: %d\n", pageBuffer->header_ready);
+  Serial.printf("pageBuffer->idx: %d\n", pageBuffer->idx);
+  Serial.printf("pageBuffer->len: %d\n", pageBuffer->len);
+  // header
+  for (int i=0; i<3; i++){
+    Serial.printf("%02x", pageBuffer->Buffer[i]);
+  }
+  Serial.printf("\n");
+  // body
+  for (int i=3; i<pageBuffer->idx; i++){
+     
+    Serial.printf("%02x", pageBuffer->Buffer[i]);
+    
+    if((i) % 2 == 0){
+      Serial.print(" ");
+    } 
+
+    if((i-2) % 20 == 0){
+      Serial.printf("\n");
+    }
+  }
+  Serial.println();
+}
+
 /****************************************/
 int parse_bluetooth_data(uint8_t AddrHighByte, uint8_t AddrLowByte, uint8_t* pData, size_t length, pageBuffer_t *pageBuffer){
   uint8_t AddrHigh = AddrHighByte; 
@@ -107,31 +134,49 @@ int parse_bluetooth_data(uint8_t AddrHighByte, uint8_t AddrLowByte, uint8_t* pDa
                   AddrHighByte, AddrLowByte);
 #endif
 
+  /* es gibt ein problem, wenn das 1. paket weniger als 3 bytes hat*/ 
   if(pageBuffer->idx == 0){ //erstes packet
-    if(pData[0] == 0x01){
+    if(length<3){
+      pageBuffer->header_ready = false;
+      Serial.printf("length: %d\n",  length);
+    }else{
+      pageBuffer->header_ready = true;
       pageBuffer->Request = pData[1];
       pageBuffer->len = pData[2];
       Serial.printf("len: %d\n", pageBuffer->len); //Serial.flush();
-    }else{
+    }
+    if(pData[0] != 0x01){
       return 0;
-     }
+    }
   }
   for(int p=0; p<length; p++){
     pageBuffer->Buffer[pageBuffer->idx] = pData[p];
     pageBuffer->idx++;
   }
+  if(!pageBuffer->header_ready){
+    if(pageBuffer->idx > 2){
+      pageBuffer->header_ready = true;
+      pageBuffer->Request = pageBuffer->Buffer[1];
+      pageBuffer->len = pageBuffer->Buffer[2];
+      Serial.printf("len: %d\n", pageBuffer->len); //Serial.flush();
+    }else{
+      Serial.printf("Message not completed... length: %d\n",  length);
+      return -1;
+    }
+  }
 #ifdef DEBUG
     Serial.printf("pageBuffer->idx: %d\n", pageBuffer->idx); //Serial.flush();
-    Serial.printf("pageBuffer->len: %d\n", pageBuffer->len); //Serial.flush();
+    //Serial.printf("pageBuffer->len: %d\n", pageBuffer->len); //Serial.flush();
 #endif
 
-  if(pageBuffer->idx < pageBuffer->len+4){  //
+  if(pageBuffer->idx < (pageBuffer->len+4)){  //
     Serial.printf("Message not completed... left bytes: %d\n",  pageBuffer->len - pageBuffer->idx); //Serial.flush();
     //return (pageBuffer->len - pageBuffer->idx+4);
     return -1;
   }
 
   Serial.printf("Message completed!\n");
+  printMsg(pageBuffer);
   switch(pageBuffer->Request){
     // Hold Register Range Request
     case 0x03:
