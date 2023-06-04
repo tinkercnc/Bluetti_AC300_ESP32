@@ -29,7 +29,7 @@ enum auto_sleep_mode {
 /* { FIELD_NAME, 
  *  PAGE (AddrHighByte), 
  *  OFFSET {AddrLowByte}, 
- *  SIZE, 
+ *  SIZE, // Register count (16bit)
  *  SCALE (if scale is needed e.g. decimal value, defaults to 0) , 
  *  ENUM (if data is enum, defaults to 0) , 
  *  FIELD_TYPE }
@@ -163,7 +163,7 @@ typedef struct device_field_data {
   enum field_names f_name;
   uint8_t f_AddrHighByte;
   uint8_t f_AddrLowByte;
-  int8_t f_size;
+  int8_t f_size;  // Register count (16bit)
   int8_t f_scale;
   int8_t f_enum;
   enum field_types f_type;
