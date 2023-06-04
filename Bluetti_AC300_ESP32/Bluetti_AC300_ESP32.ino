@@ -1,3 +1,7 @@
+/* 
+ * Board: ESP32 Wrover Module 
+ * Partition Scheme: Minimal spiffs with OTA
+ */
 //#define CONFIG_SW_COEXIST_ENABLE 1
 
 #include "BWifi.h"
